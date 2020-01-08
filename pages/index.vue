@@ -1,72 +1,81 @@
 <template>
   <div class="container">
-    <div>
-      <logo />
-      <h1 class="title">
-        TwitterCloneApp
-      </h1>
-      <h2 class="subtitle">
-        Very Short Messaging Service
-      </h2>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-      </div>
+    <div class="post-form-container">
+      <tweet-form
+        :tweet-conent="postForm.content"
+        :tweet-content="postForm.content"
+        @submit="submitEvt"
+        @input="postForm.content = $event"
+      />
+    </div>
+    <div v-for="tweet in tweets" :key="tweet.id" class="tweets-container">
+      <tweet :tweet="tweet" />
     </div>
   </div>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
+import Tweet from "~/components/Tweet.vue";
+import TweetForm from "~/components/TweetForm.vue";
+import { db } from "~/plugins/firebase.js";
+
+/* eslint no-unused-vars: 0 */
+function randomId() {
+  let result = "";
+  const elem = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const len = elem.length;
+  for (let i = 0; i < 8; i++) {
+    result += elem[Math.floor(Math.random() * len)];
+  }
+  return result;
+}
 
 export default {
   components: {
-    Logo
+    Tweet,
+    TweetForm
+  },
+  data() {
+    return {
+      tweets: [],
+      postForm: {
+        content: ""
+      }
+    };
+  },
+  async mounted() {
+    // ツイート取得
+    const snapShot = await db.collection("tweets").get();
+    snapShot.forEach(doc => {
+      this.tweets.push({ id: doc.id, ...doc.data() });
+    });
+  },
+  methods: {
+    submitEvt() {
+      // 仮のユーザ情報でツイートを追加する
+      this.tweets.unshift({
+        id: randomId(),
+        text: this.postForm.content,
+        user: {
+          name: "名無し",
+          id: "anonymous",
+          iconUrl:
+            "https://4.bp.blogspot.com/-xz7m7yMI-CI/U1T3vVaFfZI/AAAAAAAAfWI/TOJPmuapl-c/s400/figure_standing.png"
+        }
+      });
+      this.postForm.content = "";
+    }
   }
-}
+};
 </script>
 
-<style>
+<style scoped>
 .container {
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  width: 800px;
+  margin: auto;
 }
 
-.title {
-  font-family: 'Quicksand', 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
+.post-form-container {
+  border-bottom: 1px solid #eee;
 }
 </style>
