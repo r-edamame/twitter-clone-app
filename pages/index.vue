@@ -65,7 +65,8 @@ export default {
       });
       this.postForm.content = "";
     }
-  }
+  },
+  middleware: "authenticated"
 };
 </script>
 
